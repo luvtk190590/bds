@@ -1,23 +1,14 @@
-import { createClient } from "@/lib/supabase/server";
+"use client";
+
+import { useLatestProperties } from "@/lib/hooks/useProperties";
 import { formatPrice, formatArea } from "@/lib/utils/formatters";
 import Image from "next/image";
 import Link from "next/link";
 
-export default async function LeatestProperties({ excludeId }) {
-  const supabase = await createClient();
+export default function LeatestProperties({ excludeId }) {
+  const { properties, isLoading } = useLatestProperties(excludeId);
 
-  const { data: properties } = await supabase
-    .from("properties")
-    .select(`
-      id, title, slug, price, listing_type, area, bedrooms, bathrooms,
-      property_images!inner(url, is_primary)
-    `)
-    .eq("status", "approved")
-    .eq("property_images.is_primary", true)
-    .neq("id", excludeId ?? "00000000-0000-0000-0000-000000000000")
-    .order("created_at", { ascending: false })
-    .limit(5);
-
+  if (isLoading) return <div className="text-center py-3"><p>Loading...</p></div>;
   if (!properties?.length) return null;
 
   return (
@@ -25,7 +16,7 @@ export default async function LeatestProperties({ excludeId }) {
       <h5 className="fw-6 title">BĐS mới nhất</h5>
       <ul>
         {properties.map((p) => {
-          const img = p.property_images?.[0]?.url || "/images/home/house-1.jpg";
+          const img = p.images?.[0]?.url || "/images/home/house-1.jpg";
           const href = `/property-details/${p.slug || p.id}`;
           return (
             <li key={p.id} className="latest-property-item">
