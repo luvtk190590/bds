@@ -6,11 +6,12 @@ import PropertyCard from "@/components/property/PropertyCard";
 import { useProperties } from "@/lib/hooks/useProperties";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useFavorites } from "@/lib/hooks/useRecommendations";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function PropertyListWithMap() {
     const searchParams = useSearchParams();
+    const router = useRouter();
     const supabase = createClient();
     const [viewMode, setViewMode] = useState("split"); // split, list, map
     const [page, setPage] = useState(1);
@@ -122,7 +123,7 @@ export default function PropertyListWithMap() {
                                     page={page}
                                     totalPages={totalPages}
                                     onPageChange={setPage}
-                                    toggleFavorite={profile ? toggleFavorite : null}
+                                    toggleFavorite={id => { if (!profile) { router.push("/?login=1"); return; } toggleFavorite(id); }}
                                     isFavorited={isFavorited}
                                 />
                             </div>
@@ -137,7 +138,7 @@ export default function PropertyListWithMap() {
                                 page={page}
                                 totalPages={totalPages}
                                 onPageChange={setPage}
-                                toggleFavorite={profile ? toggleFavorite : null}
+                                toggleFavorite={id => { if (!profile) { router.push("/?login=1"); return; } toggleFavorite(id); }}
                                 isFavorited={isFavorited}
                                 columns={3}
                             />

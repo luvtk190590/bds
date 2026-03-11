@@ -7,9 +7,14 @@ const SHOW_LIMIT = 10;
 export default function Features({ propertyItem }) {
   const [showAll, setShowAll] = useState(false);
 
-  const amenities = Array.isArray(propertyItem?.amenities)
-    ? propertyItem.amenities.filter(Boolean)
-    : [];
+  // amenities có thể là array hoặc JSON string (tuỳ cách Supabase trả về)
+  let amenities = [];
+  const raw = propertyItem?.amenities;
+  if (Array.isArray(raw)) {
+    amenities = raw.filter(Boolean);
+  } else if (typeof raw === "string" && raw.trim()) {
+    try { amenities = JSON.parse(raw).filter(Boolean); } catch { amenities = []; }
+  }
 
   if (!amenities.length) return null;
 

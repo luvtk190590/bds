@@ -288,11 +288,12 @@
   .ss-placeholder { color: #161e2d; font-weight: 600; }
   .ss-arrow {
     position: absolute;
-    right: 4px;
-    top: 50%;
-    margin-top: 2px;
+    right: 8%;
+    top: 22%;
+    transform: rotate(45deg);
     border-color: #555;
   }
+  &.ss-open .ss-arrow { transform: rotate(225deg); }
   .ss-dropdown { top: calc(100% + 10px); }
 }
 
@@ -706,5 +707,35 @@
   .leaflet-popup-content {
     margin: 0;
     width: auto !important;
+  }
+}
+
+// ── Nút yêu thích trong trang chi tiết ──
+.icon-box .item.fav-btn {
+  background: none;
+  border: 1px solid #e2e7ef; // giữ border đồng bộ với các icon bên cạnh
+  cursor: pointer;
+  padding: 0;
+
+  svg path {
+    stroke: #A3ABB0;
+    fill: none;
+    transition: stroke 0.2s, fill 0.2s;
+  }
+
+  // Trạng thái đã yêu thích
+  &.is-favorited svg path {
+    stroke: #e74c3c;
+    fill: #fecdd3;
+  }
+
+  // Hover: nền xanh primary, icon trắng (đồng bộ với các icon khác)
+  &:hover {
+    background-color: var(--primary, #1563df);
+
+    svg path {
+      stroke: #fff !important;
+      fill: none !important;
+    }
   }
 }

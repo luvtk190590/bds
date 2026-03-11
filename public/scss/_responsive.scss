@@ -880,18 +880,28 @@
   }
   .header-account {
     gap: 10px;
+    margin-right: 50px;
     .tf-btn {
       min-width: 150px;
     }
     .btn-login {
       min-width: 100px;
     }
+    ul {
+      margin-right: 20px;
+    }
+    .dropdown-menu {
+      margin-top: 19px !important;
+    }
   }
-  .main-header .main-menu .navigation > li {
-    padding-right: 30px;
+  .main-header .main-menu {
+    display: none;
   }
-  .header-account ul {
-    margin-right: 6px;
+  .main-header {
+    padding: 15px;
+  }
+  .mobile-button {
+    display: block !important;
   }
   .main-header .main-menu .navigation > li.dropdown2 > a::after {
     font-size: 12px;
@@ -1048,27 +1058,8 @@
     }
   }
 
-  .main-header .main-menu {
-    display: none;
-  }
-
-  .main-header {
-    padding: 15px;
-    // height: unset;
-  }
-  .mobile-button {
-    display: block !important;
-  }
-  .header-account ul {
-    margin-right: 20px;
-  }
-  .header-account {
-    margin-right: 50px;
-    .dropdown-menu {
-      margin-top: 19px !important;
-    }
-  }
 }
+
 
 @media only screen and (max-width: 991px) {
   .box-location-v2 {

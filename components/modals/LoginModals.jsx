@@ -1,17 +1,75 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/lib/hooks/useAuth";
 import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function LoginModals() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, isAuthenticated } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Đóng modal khi đăng nhập thành công
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const modal = document.getElementById("modalLogin");
+    if (!modal?.classList.contains("show")) return;
+    const bsModal = window.bootstrap?.Modal?.getInstance(modal);
+    if (bsModal) {
+      bsModal.hide();
+    } else {
+      // Fallback: đóng thủ công
+      modal.classList.remove("show");
+      modal.style.display = "none";
+      document.body.classList.remove("modal-open");
+      document.body.style.removeProperty("overflow");
+      document.body.style.removeProperty("padding-right");
+      document.querySelector(".modal-backdrop")?.remove();
+    }
+  }, [isAuthenticated]);
+
+  // Thông báo xác minh email thành công
+  useEffect(() => {
+    if (searchParams.get("verified") === "1") {
+      toast.success("Email đã xác nhận! Tài khoản của bạn đã được kích hoạt.", { duration: 5000 });
+      const p = new URLSearchParams(window.location.search);
+      p.delete("verified");
+      const newUrl = window.location.pathname + (p.toString() ? "?" + p.toString() : "");
+      window.history.replaceState({}, "", newUrl);
+    }
+    if (searchParams.get("error")) {
+      toast.error("Có lỗi xác thực. Vui lòng thử lại.");
+      const p = new URLSearchParams(window.location.search);
+      p.delete("error");
+      window.history.replaceState({}, "", window.location.pathname + (p.toString() ? "?" + p.toString() : ""));
+    }
+  }, []);
+
+  // Auto-open modal khi URL có ?login=1
+  useEffect(() => {
+    if (searchParams.get("login") === "1") {
+      const tryOpen = () => {
+        const modal = document.getElementById("modalLogin");
+        if (modal && window.bootstrap?.Modal) {
+          const bsModal = window.bootstrap.Modal.getOrCreateInstance(modal);
+          bsModal.show();
+          // Xóa param khỏi URL
+          const p = new URLSearchParams(window.location.search);
+          p.delete("login");
+          const newUrl = window.location.pathname + (p.toString() ? "?" + p.toString() : "");
+          window.history.replaceState({}, "", newUrl);
+        } else {
+          setTimeout(tryOpen, 200);
+        }
+      };
+      setTimeout(tryOpen, 300);
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,12 +88,8 @@ export default function LoginModals() {
     }
 
     toast.success("Đăng nhập thành công!");
-    // Close modal
-    const modal = document.getElementById("modalLogin");
-    const bsModal = window.bootstrap?.Modal?.getInstance(modal);
-    if (bsModal) bsModal.hide();
-
-    router.push("/dashboard");
+    const role = data?.user?.user_metadata?.role;
+    router.push(role === "admin" ? "/admin" : "/dashboard");
   };
 
   return (

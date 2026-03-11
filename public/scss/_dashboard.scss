@@ -57,9 +57,12 @@
         }
     }
     .dropdown-menu {
-        max-width: 204px;
-        width: 100%;
+        min-width: 200px;
+        width: auto;
+        white-space: nowrap;
         margin-top: 23px !important;
+        right: 0;
+        left: auto;
         border: 1px solid $outline;
         border-top: 0;
         border-radius: 0;
@@ -67,10 +70,10 @@
         border-bottom-right-radius: 16px;
         padding: 0;
         .dropdown-item {
-            padding: 16px 24px;
-            line-height: 26px;
+            padding: 12px 20px;
+            line-height: 24px;
             font-weight: 600;
-            font-size: 16px;
+            font-size: 14px;
             text-transform: capitalize;
             color: $variant-1;
             @include transition3;
@@ -925,4 +928,38 @@ tr {
             width: 100%;
         }
     }
+}
+// Avatar Upload component
+.avatar-upload-wrap {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  .avatar-img-wrap {
+    flex-shrink: 0;
+    border: 3px solid #e2e8f0;
+    border-radius: 50%;
+    overflow: visible;
+  }
+}
+
+// Role/status badges in dashboard
+.admin-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+
+  &.badge-admin   { background: #ede9fe; color: #6d28d9; }
+  &.badge-seller  { background: #fef3c7; color: #92400e; }
+  &.badge-broker  { background: #dbeafe; color: #1d4ed8; }
+  &.badge-buyer   { background: #f0fdf4; color: #15803d; }
+  &.badge-approved { background: #dcfce7; color: #16a34a; }
+  &.badge-pending  { background: #fef9c3; color: #854d0e; }
+  &.badge-draft    { background: #f1f5f9; color: #64748b; }
+  &.badge-rejected { background: #fee2e2; color: #dc2626; }
 }

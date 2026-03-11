@@ -1,300 +1,286 @@
 "use client";
-import React, { useState } from "react";
-import Image from "next/image";
+import { useState } from "react";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { createClient } from "@/lib/supabase/client";
+import AvatarUpload from "@/components/common/AvatarUpload";
+import toast from "react-hot-toast";
+
 export default function MyProfile() {
-  const [preview, setPreview] = useState("/images/avatar/account.jpg");
+  const { profile, updateProfile, user } = useAuth();
+  const supabase = createClient();
 
-  const handleImageUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreview(reader.result); // Set the preview to the uploaded image
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-  const [preview2, setPreview2] = useState("/images/avatar/account-2.jpg");
+  const [saving, setSaving] = useState(false);
+  const [changingPwd, setChangingPwd] = useState(false);
+  const [form, setForm] = useState(null);
+  const [pwd, setPwd] = useState({ current: "", newPwd: "", confirm: "" });
 
-  const handleImageUpload2 = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreview2(reader.result); // Set the preview to the uploaded image
-      };
-      reader.readAsDataURL(file);
+  // Initialize form from profile once
+  if (profile && form === null) {
+    setForm({
+      full_name: profile.full_name || "",
+      phone: profile.phone || "",
+      bio: profile.bio || "",
+      company_name: profile.company_name || "",
+      position: profile.position || "",
+      office_phone: profile.office_phone || "",
+      office_address: profile.office_address || "",
+      website: profile.website || "",
+      facebook: profile.facebook || "",
+      zalo: profile.zalo || "",
+    });
+  }
+
+  if (!profile || !form) {
+    return (
+      <div className="main-content">
+        <div className="main-content-inner wrap-dashboard-content-2">
+          <p style={{ color: "#94a3b8", padding: 40, textAlign: "center" }}>Đang tải...</p>
+        </div>
+      </div>
+    );
+  }
+
+  function set(key, val) {
+    setForm(prev => ({ ...prev, [key]: val }));
+  }
+
+  async function saveInfo(e) {
+    e.preventDefault();
+    setSaving(true);
+    const { error } = await updateProfile({
+      full_name: form.full_name.trim() || null,
+      phone: form.phone.trim() || null,
+      bio: form.bio.trim() || null,
+      company_name: form.company_name.trim() || null,
+      position: form.position.trim() || null,
+      office_phone: form.office_phone.trim() || null,
+      office_address: form.office_address.trim() || null,
+      website: form.website.trim() || null,
+      facebook: form.facebook.trim() || null,
+      zalo: form.zalo.trim() || null,
+    });
+    if (error) toast.error("Lỗi lưu: " + error.message);
+    else toast.success("Đã cập nhật thông tin!");
+    setSaving(false);
+  }
+
+  async function savePassword(e) {
+    e.preventDefault();
+    if (!pwd.newPwd) { toast.error("Nhập mật khẩu mới"); return; }
+    if (pwd.newPwd !== pwd.confirm) { toast.error("Mật khẩu xác nhận không khớp"); return; }
+    if (pwd.newPwd.length < 6) { toast.error("Mật khẩu tối thiểu 6 ký tự"); return; }
+
+    setChangingPwd(true);
+    const { error } = await supabase.auth.updateUser({ password: pwd.newPwd });
+    if (error) toast.error("Lỗi: " + error.message);
+    else {
+      toast.success("Đã đổi mật khẩu thành công!");
+      setPwd({ current: "", newPwd: "", confirm: "" });
     }
-  };
+    setChangingPwd(false);
+  }
+
+  const roleMap = { admin: "Quản trị viên", seller: "Người bán", broker: "Môi giới", buyer: "Người mua" };
+  const verMap = { verified: "Đã xác minh", pending: "Chờ duyệt", unverified: "Chưa xác minh", rejected: "Từ chối" };
+
   return (
     <div className="main-content">
       <div className="main-content-inner wrap-dashboard-content-2">
-        <div className="button-show-hide show-mb">
-          <span className="body-1">Show Dashboard</span>
-        </div>
         <div className="widget-box-2">
-          <div className="box">
-            <h5 className="title">Account Settings</h5>
-            <div className="box-agent-account">
-              <h6>Agent Account</h6>
-              <p className="note">
-                Your current account type is set to agent, if you want to remove
-                your agent account, and return to normal account, you must click
-                the button below
-              </p>
-              <a href="#" className="tf-btn primary">
-                Remove Agent Account
-              </a>
+          {/* Header */}
+          <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24 }}>
+            <div style={{ flex: 1 }}>
+              <h5 className="title" style={{ marginBottom: 4 }}>Cài đặt tài khoản</h5>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <span className={`admin-badge badge-${profile.role}`}>{roleMap[profile.role] || profile.role}</span>
+                <span className={`admin-badge badge-${profile.verification_status === "verified" ? "approved" : profile.verification_status === "pending" ? "pending" : "draft"}`}>
+                  {verMap[profile.verification_status || "unverified"]}
+                </span>
+              </div>
             </div>
           </div>
+
+          {/* Avatar section */}
           <div className="box">
-            <h5 className="title">Avatar</h5>
+            <h6 className="title" style={{ marginBottom: 16 }}>Ảnh đại diện</h6>
             <div className="box-agent-avt">
-              <div className="avatar">
-                <Image
-                  alt="avatar"
-                  loading="lazy"
-                  width={128}
-                  height={128}
-                  src={preview}
+              <AvatarUpload
+                userId={profile.id}
+                currentUrl={profile.avatar_url}
+                size={100}
+              />
+            </div>
+          </div>
+
+          {/* Info form */}
+          <form onSubmit={saveInfo}>
+            <h5 className="title" style={{ marginTop: 24, marginBottom: 16 }}>Thông tin cá nhân</h5>
+
+            <div className="box box-fieldset">
+              <label>Họ và tên <span>*</span></label>
+              <input
+                type="text"
+                className="form-control style-1"
+                value={form.full_name}
+                onChange={e => set("full_name", e.target.value)}
+                placeholder="Nguyễn Văn A"
+              />
+            </div>
+
+            <div className="box box-fieldset">
+              <label>Email</label>
+              <input
+                type="email"
+                className="form-control style-1"
+                value={profile.email || user?.email || ""}
+                disabled
+                style={{ background: "#f8fafc", color: "#94a3b8" }}
+              />
+            </div>
+
+            <div className="box grid-4 gap-30">
+              <div className="box-fieldset">
+                <label>Số điện thoại</label>
+                <input
+                  type="tel"
+                  className="form-control style-1"
+                  value={form.phone}
+                  onChange={e => set("phone", e.target.value)}
+                  placeholder="0912345678"
                 />
               </div>
-              <div className="content uploadfile">
-                <p>Upload a new avatar</p>
-                <div className="box-ip">
+              <div className="box-fieldset">
+                <label>Công ty</label>
+                <input
+                  type="text"
+                  className="form-control style-1"
+                  value={form.company_name}
+                  onChange={e => set("company_name", e.target.value)}
+                  placeholder="Tên công ty"
+                />
+              </div>
+              <div className="box-fieldset">
+                <label>Chức vụ</label>
+                <input
+                  type="text"
+                  className="form-control style-1"
+                  value={form.position}
+                  onChange={e => set("position", e.target.value)}
+                  placeholder="Giám đốc kinh doanh"
+                />
+              </div>
+              <div className="box-fieldset">
+                <label>SĐT văn phòng</label>
+                <input
+                  type="tel"
+                  className="form-control style-1"
+                  value={form.office_phone}
+                  onChange={e => set("office_phone", e.target.value)}
+                  placeholder="028 xxxx xxxx"
+                />
+              </div>
+            </div>
+
+            <div className="box box-fieldset">
+              <label>Địa chỉ văn phòng</label>
+              <input
+                type="text"
+                className="form-control style-1"
+                value={form.office_address}
+                onChange={e => set("office_address", e.target.value)}
+                placeholder="123 Nguyễn Huệ, Q.1, TP.HCM"
+              />
+            </div>
+
+            <div className="box box-fieldset">
+              <label>Giới thiệu bản thân</label>
+              <textarea
+                rows={4}
+                className="form-control style-1"
+                value={form.bio}
+                onChange={e => set("bio", e.target.value)}
+                placeholder="Giới thiệu ngắn về bản thân, kinh nghiệm..."
+                style={{ resize: "vertical" }}
+              />
+            </div>
+
+            <h5 className="title" style={{ marginTop: 8, marginBottom: 16 }}>Mạng xã hội & Website</h5>
+
+            <div className="box grid-4 gap-30">
+              <div className="box-fieldset">
+                <label>Facebook</label>
+                <input
+                  type="url"
+                  className="form-control style-1"
+                  value={form.facebook}
+                  onChange={e => set("facebook", e.target.value)}
+                  placeholder="https://facebook.com/..."
+                />
+              </div>
+              <div className="box-fieldset">
+                <label>Zalo</label>
+                <input
+                  type="text"
+                  className="form-control style-1"
+                  value={form.zalo}
+                  onChange={e => set("zalo", e.target.value)}
+                  placeholder="Số Zalo"
+                />
+              </div>
+              <div className="box-fieldset">
+                <label>Website</label>
+                <input
+                  type="url"
+                  className="form-control style-1"
+                  value={form.website}
+                  onChange={e => set("website", e.target.value)}
+                  placeholder="https://..."
+                />
+              </div>
+            </div>
+
+            <div className="box" style={{ marginTop: 8 }}>
+              <button type="submit" className="tf-btn primary" disabled={saving}>
+                {saving ? "Đang lưu..." : "Lưu thông tin"}
+              </button>
+            </div>
+          </form>
+
+          {/* Change password */}
+          <form onSubmit={savePassword}>
+            <h5 className="title" style={{ marginTop: 24, marginBottom: 16 }}>Đổi mật khẩu</h5>
+            <div className="box grid-3 gap-30">
+              <div className="box-fieldset">
+                <label>Mật khẩu mới <span>*</span></label>
+                <div className="box-password">
                   <input
-                    type="file"
-                    className="ip-file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
+                    type="password"
+                    className="form-contact style-1 password-field2"
+                    placeholder="Mật khẩu mới"
+                    value={pwd.newPwd}
+                    onChange={e => setPwd(p => ({ ...p, newPwd: e.target.value }))}
                   />
                 </div>
-                <p>JPEG 100x100</p>
               </div>
-            </div>
-          </div>
-          <div className="box">
-            <h5 className="title">Agent Poster</h5>
-            <div className="box-agent-avt">
-              <div className="img-poster">
-                <Image
-                  alt="avatar"
-                  loading="lazy"
-                  width={875}
-                  height={500}
-                  src={preview2}
-                />
-              </div>
-              <div className="content uploadfile">
-                <p>Upload a new avatar</p>
-                <div className="box-ip">
+              <div className="box-fieldset">
+                <label>Xác nhận mật khẩu <span>*</span></label>
+                <div className="box-password">
                   <input
-                    type="file"
-                    className="ip-file"
-                    accept="image/*"
-                    onChange={handleImageUpload2}
+                    type="password"
+                    className="form-contact style-1 password-field3"
+                    placeholder="Nhập lại mật khẩu mới"
+                    value={pwd.confirm}
+                    onChange={e => setPwd(p => ({ ...p, confirm: e.target.value }))}
                   />
                 </div>
-                <p>JPEG 100x100</p>
               </div>
             </div>
-          </div>
-          <h5 className="title">Information</h5>
-          <div className="box box-fieldset">
-            <label htmlFor="name">
-              Full name:<span>*</span>
-            </label>
-            <input
-              type="text"
-              defaultValue="Demo Agent"
-              className="form-control style-1"
-            />
-          </div>
-          <div className="box box-fieldset">
-            <label htmlFor="desc">
-              Description:<span>*</span>
-            </label>
-            <textarea
-              defaultValue={
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
-              }
-            />
-          </div>
-          <div className="box grid-4 gap-30">
-            <div className="box-fieldset">
-              <label htmlFor="company">
-                Your Company:<span>*</span>
-              </label>
-              <input
-                type="text"
-                defaultValue="Your Company"
-                className="form-control style-1"
-              />
+            <div className="box" style={{ marginTop: 8 }}>
+              <button type="submit" className="tf-btn primary" disabled={changingPwd}>
+                {changingPwd ? "Đang đổi..." : "Đổi mật khẩu"}
+              </button>
             </div>
-            <div className="box-fieldset">
-              <label htmlFor="position">
-                Position:<span>*</span>
-              </label>
-              <input
-                type="text"
-                defaultValue="Your Company"
-                className="form-control style-1"
-              />
-            </div>
-            <div className="box-fieldset">
-              <label htmlFor="num">
-                Office Number:<span>*</span>
-              </label>
-              <input
-                type="number"
-                defaultValue={1332565894}
-                className="form-control style-1"
-              />
-            </div>
-            <div className="box-fieldset">
-              <label htmlFor="address">
-                Office Address:<span>*</span>
-              </label>
-              <input
-                type="text"
-                defaultValue="10 Bringhurst St, Houston, TX"
-                className="form-control style-1"
-              />
-            </div>
-          </div>
-          <div className="box grid-4 gap-30 box-info-2">
-            <div className="box-fieldset">
-              <label htmlFor="job">
-                Job:<span>*</span>
-              </label>
-              <input
-                type="text"
-                defaultValue="Realter"
-                className="form-control style-1"
-              />
-            </div>
-            <div className="box-fieldset">
-              <label htmlFor="email">
-                Email address:<span>*</span>
-              </label>
-              <input
-                type="text"
-                defaultValue="themeflat@gmail.com"
-                className="form-control style-1"
-              />
-            </div>
-            <div className="box-fieldset">
-              <label htmlFor="phone">
-                Your Phone:<span>*</span>
-              </label>
-              <input
-                type="number"
-                defaultValue={1332565894}
-                className="form-control style-1"
-              />
-            </div>
-          </div>
-          <div className="box box-fieldset">
-            <label htmlFor="location">
-              Location:<span>*</span>
-            </label>
-            <input
-              type="text"
-              defaultValue="634 E 236th St, Bronx, NY 10466"
-              className="form-control style-1"
-            />
-          </div>
-          <div className="box box-fieldset">
-            <label htmlFor="fb">
-              Facebook:<span>*</span>
-            </label>
-            <input
-              type="text"
-              defaultValue="#"
-              className="form-control style-1"
-            />
-          </div>
-          <div className="box box-fieldset">
-            <label htmlFor="tw">
-              Twitter:<span>*</span>
-            </label>
-            <input
-              type="text"
-              defaultValue="#"
-              className="form-control style-1"
-            />
-          </div>
-          <div className="box box-fieldset">
-            <label htmlFor="linkedin">
-              Linkedin:<span>*</span>
-            </label>
-            <input
-              type="text"
-              defaultValue="#"
-              className="form-control style-1"
-            />
-          </div>
-          <div className="box">
-            <a href="#" className="tf-btn primary">
-              Save &amp; Update
-            </a>
-          </div>
-          <h5 className="title">Change password</h5>
-          <div className="box grid-3 gap-30">
-            <div className="box-fieldset">
-              <label htmlFor="old-pass">
-                Old Password:<span>*</span>
-              </label>
-              <div className="box-password">
-                <input
-                  type="password"
-                  className="form-contact style-1 password-field"
-                  placeholder="Password"
-                />
-                <span className="show-pass">
-                  <i className="icon-pass icon-eye" />
-                  <i className="icon-pass icon-eye-off" />
-                </span>
-              </div>
-            </div>
-            <div className="box-fieldset">
-              <label htmlFor="new-pass">
-                New Password:<span>*</span>
-              </label>
-              <div className="box-password">
-                <input
-                  type="password"
-                  className="form-contact style-1 password-field2"
-                  placeholder="Password"
-                />
-                <span className="show-pass2">
-                  <i className="icon-pass icon-eye" />
-                  <i className="icon-pass icon-eye-off" />
-                </span>
-              </div>
-            </div>
-            <div className="box-fieldset">
-              <label htmlFor="confirm-pass">
-                Confirm Password:<span>*</span>
-              </label>
-              <div className="box-password">
-                <input
-                  type="password"
-                  className="form-contact style-1 password-field3"
-                  placeholder="Password"
-                />
-                <span className="show-pass3">
-                  <i className="icon-pass icon-eye" />
-                  <i className="icon-pass icon-eye-off" />
-                </span>
-              </div>
-            </div>
-          </div>
-          <div className="box">
-            <a href="#" className="tf-btn primary">
-              Update Password
-            </a>
-          </div>
+          </form>
         </div>
       </div>
       <div className="footer-dashboard">

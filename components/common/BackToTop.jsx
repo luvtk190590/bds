@@ -48,7 +48,7 @@ export default function BackToTop() {
           style={{
             transition: "0s",
             strokeDasharray: "307.919, 307.919",
-            strokeDashoffset: 307.919 - (scrolled / scrollHeight) * 307.919,
+            strokeDashoffset: 307.919 - (scrollHeight > 0 ? (scrolled / scrollHeight) * 307.919 : 0),
           }}
         />
       </svg>

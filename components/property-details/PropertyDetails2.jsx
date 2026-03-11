@@ -5,8 +5,6 @@ import Details from "./Details";
 import Features from "./Features";
 import MapLocation from "./MapLocation";
 import FloorPlan from "./FloorPlan";
-import AttachMents from "./AttachMents";
-import Explore from "./Explore";
 import LoanCalculator from "./LoanCalculator";
 import Nearby from "./Nearby";
 import GuestReview from "./GuestReview";
@@ -151,9 +149,7 @@ export default function PropertyDetails2() {
                   <Overview />
                 </div>
               </div>
-              <div className="single-property-element single-property-video">
-                <Video />
-              </div>
+
               <div className="single-property-element single-property-info">
                 <Details />
               </div>
@@ -165,12 +161,6 @@ export default function PropertyDetails2() {
               </div>
               <div className="single-property-element single-property-floor">
                 <FloorPlan />
-              </div>
-              <div className="single-property-element single-property-attachments">
-                <AttachMents />
-              </div>
-              <div className="single-property-element single-property-explore">
-                <Explore />
               </div>
               <div className="single-property-element single-property-loan">
                 <LoanCalculator />

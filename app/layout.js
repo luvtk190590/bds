@@ -11,6 +11,7 @@ import Register from "@/components/modals/Register";
 import BackToTop from "@/components/common/BackToTop";
 import { AuthProvider } from "@/lib/hooks/useAuth";
 import { Toaster } from "react-hot-toast";
+import { Suspense } from "react";
 
 export default function RootLayout({ children }) {
   useEffect(() => {
@@ -38,7 +39,7 @@ export default function RootLayout({ children }) {
               {children}
             </div>
           </div>
-          <LoginModals />
+          <Suspense><LoginModals /></Suspense>
           <Register />
           <BackToTop />
           <Toaster

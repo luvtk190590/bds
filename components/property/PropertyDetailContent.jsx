@@ -27,7 +27,7 @@ export default function PropertyDetailContent({ slug }) {
     const { toggleFavorite, isFavorited } = useFavorites(profile?.id);
     const viewStartRef = useRef(Date.now());
 
-    // Track view duration when leaving
+    // Track view duration when leaving (for recommendations)
     useEffect(() => {
         if (!property || !profile) return;
 
@@ -38,6 +38,14 @@ export default function PropertyDetailContent({ slug }) {
             trackPropertyView(profile.id, property.id, duration);
         };
     }, [property?.id, profile?.id]);
+
+    // Record page view for stats (all visitors including anonymous)
+    useEffect(() => {
+        if (!property?.id) return;
+        import("@/lib/supabase/client").then(({ createClient }) => {
+            createClient().from("property_views").insert({ property_id: property.id });
+        });
+    }, [property?.id]);
 
     // Nearby properties
     const lat =
@@ -89,7 +97,8 @@ export default function PropertyDetailContent({ slug }) {
         }
     };
 
-    if (isLoading) {
+    // Chỉ show loading khi lần đầu tải (chưa có data nào)
+    if (isLoading && !property) {
         return (
             <div className="text-center py-5">
                 <div className="spinner-border text-primary" role="status" />
@@ -98,7 +107,8 @@ export default function PropertyDetailContent({ slug }) {
         );
     }
 
-    if (error || !property) {
+    // Chỉ show "không tìm thấy" khi thực sự không có data (không phải lỗi revalidation thoáng qua)
+    if (!property) {
         return (
             <div className="text-center py-5">
                 <h5>Không tìm thấy bất động sản</h5>
@@ -119,7 +129,14 @@ export default function PropertyDetailContent({ slug }) {
 
     return (
         <div className="property-detail-wrapper w-100 p-0 m-0">
-            <DetailsTitle1 propertyItem={property} />
+            <DetailsTitle1
+          propertyItem={property}
+          onFavoriteToggle={id => {
+            if (!profile) { router.push("/?login=1"); return; }
+            toggleFavorite(id);
+          }}
+          isFavorited={isFavorited(property.id)}
+        />
             <Slider1 propertyItem={property} />
             <PropertyDetails propertyItem={property} />
         </div>

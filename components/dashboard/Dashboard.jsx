@@ -1,421 +1,353 @@
-import React from "react";
-import LineChart from "./LineChart";
-import DropdownSelect from "../common/DropdownSelect";
+"use client";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import Pagination from "../common/Pagination";
-import { properties2, properties4 } from "@/data/properties";
-import Pagination2 from "../common/Pagination2";
+import { createClient } from "@/lib/supabase/client";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { formatPrice } from "@/lib/utils/formatters";
+import LineChart from "./LineChart";
 import UserPreferences from "./UserPreferences";
-import RecommendedSection from "@/components/property/RecommendedSection";
+
+const STATUS_LABELS = {
+  pending:  "Chờ duyệt",
+  approved: "Đã duyệt",
+  rejected: "Từ chối",
+  sold:     "Đã bán",
+};
+const STATUS_COLORS = {
+  pending:  { bg: "#fef9c3", color: "#854d0e" },
+  approved: { bg: "#dcfce7", color: "#166534" },
+  rejected: { bg: "#fee2e2", color: "#991b1b" },
+  sold:     { bg: "#e0e7ff", color: "#3730a3" },
+};
+
 export default function Dashboard() {
+  const { profile, loading: authLoading } = useAuth();
+  const supabase = createClient();
+
+  const [stats, setStats] = useState({ total: 0, pending: 0, reviews: 0 });
+  const [recentProps, setRecentProps] = useState([]);
+  const [recentReviews, setRecentReviews] = useState([]);
+  const [viewChart, setViewChart] = useState({ labels: [], data: [] });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (authLoading || !profile?.id) {
+      if (!authLoading) setLoading(false);
+      return;
+    }
+
+    async function loadData() {
+      const pid = profile.id;
+
+      // Tin đăng: tổng + chờ duyệt + 5 gần nhất
+      const [
+        { count: total },
+        { count: pending },
+        { data: propData },
+        { data: allPropIds },
+      ] = await Promise.all([
+        supabase.from("properties").select("*", { count: "exact", head: true }).eq("owner_id", pid),
+        supabase.from("properties").select("*", { count: "exact", head: true }).eq("owner_id", pid).eq("approval_status", "pending"),
+        supabase
+          .from("properties")
+          .select("id, title, slug, price, approval_status, created_at, listing_type, property_images(url)")
+          .eq("owner_id", pid)
+          .order("created_at", { ascending: false })
+          .limit(5),
+        supabase.from("properties").select("id").eq("owner_id", pid),
+      ]);
+
+      setStats(prev => ({ ...prev, total: total || 0, pending: pending || 0 }));
+      setRecentProps(propData || []);
+
+      // Đánh giá trên các tin đăng của user
+      const ids = (allPropIds || []).map(p => p.id);
+      if (ids.length > 0) {
+        const [{ count: reviews }, { data: reviewData }] = await Promise.all([
+          supabase
+            .from("property_reviews")
+            .select("*", { count: "exact", head: true })
+            .in("property_id", ids)
+            .eq("status", "approved"),
+          supabase
+            .from("property_reviews")
+            .select("id, content, author_name, created_at, property_id, profiles!author_id(full_name, avatar_url)")
+            .in("property_id", ids)
+            .eq("status", "approved")
+            .order("created_at", { ascending: false })
+            .limit(5),
+        ]);
+        setStats(prev => ({ ...prev, reviews: reviews || 0 }));
+        setRecentReviews(reviewData || []);
+      }
+
+      // ── Views theo tháng (12 tháng gần nhất) ──
+      if (ids.length > 0) {
+        const now = new Date();
+        const from = new Date(now.getFullYear(), now.getMonth() - 11, 1).toISOString();
+
+        const { data: viewRows } = await supabase
+          .from("property_views")
+          .select("viewed_at")
+          .in("property_id", ids)
+          .gte("viewed_at", from);
+
+        // Gom theo tháng
+        const counts = {};
+        (viewRows || []).forEach(row => {
+          const d = new Date(row.viewed_at);
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+          counts[key] = (counts[key] || 0) + 1;
+        });
+
+        const labels = [];
+        const data = [];
+        for (let i = 11; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+          labels.push(`T${d.getMonth() + 1}/${String(d.getFullYear()).slice(-2)}`);
+          data.push(counts[key] || 0);
+        }
+        setViewChart({ labels, data });
+      }
+
+      setLoading(false);
+    }
+
+    loadData();
+  }, [profile?.id, authLoading]);
+
   return (
     <div className="main-content">
       <div className="main-content-inner">
         <div className="button-show-hide show-mb">
           <span className="body-1">Show Dashboard</span>
         </div>
+
+        {/* ── Counters ── */}
         <div className="flat-counter-v2 tf-counter">
           <div className="counter-box">
             <div className="box-icon">
               <span className="icon icon-listing" />
             </div>
             <div className="content-box">
-              <div className="title-count text-variant-1">Your listing</div>
+              <div className="title-count text-variant-1">Tin đăng của tôi</div>
               <div className="box-count d-flex align-items-end">
-                {/* <h3 className="number fw-8" data-speed="2000" data-to="17" data-inviewport="yes">32</h3>       */}
-                <h3 className="fw-8">32</h3>
-                <span className="text">/50 remaining</span>
+                <h3 className="fw-8">{loading ? "—" : stats.total}</h3>
               </div>
             </div>
           </div>
+
           <div className="counter-box">
             <div className="box-icon">
               <span className="icon icon-pending" />
             </div>
             <div className="content-box">
-              <div className="title-count text-variant-1">Pending</div>
+              <div className="title-count text-variant-1">Chờ duyệt</div>
               <div className="box-count d-flex align-items-end">
-                <h3 className="fw-8">02</h3>
+                <h3 className="fw-8">{loading ? "—" : stats.pending}</h3>
               </div>
             </div>
           </div>
-          <div className="counter-box">
-            <div className="box-icon">
-              <span className="icon icon-favorite" />
-            </div>
-            <div className="content-box">
-              <div className="title-count text-variant-1">Favorites</div>
-              <div className="d-flex align-items-end">
-                {/* <h6 className="number" data-speed="2000" data-to="1" data-inviewport="yes">1</h6>  */}
-                <h3 className="fw-8">06</h3>
-              </div>
-            </div>
-          </div>
+
           <div className="counter-box">
             <div className="box-icon">
               <span className="icon icon-review" />
             </div>
             <div className="content-box">
-              <div className="title-count text-variant-1">Reviews</div>
+              <div className="title-count text-variant-1">Đánh giá nhận được</div>
               <div className="d-flex align-items-end">
-                <h3 className="fw-8">1.483</h3>
+                <h3 className="fw-8">{loading ? "—" : stats.reviews}</h3>
               </div>
             </div>
           </div>
         </div>
+
         <div className="wrapper-content row">
           <div className="col-xl-9">
+
+            {/* ── Tin đăng gần đây ── */}
             <div className="widget-box-2 wd-listing">
-              <h5 className="title">New Listing</h5>
-              <div className="wd-filter">
-                <div className="ip-group icon-left">
-                  <input type="text" placeholder="Search" />
-                  <span className="icon icon-search" />
-                </div>
-                <div className="ip-group icon">
-                  <input
-                    type="text"
-                    id="datepicker1"
-                    className="ip-datepicker icon"
-                    placeholder="From Date"
-                  />
-                </div>
-                <div className="ip-group icon">
-                  <input
-                    type="text"
-                    id="datepicker2"
-                    className="ip-datepicker icon"
-                    placeholder="To Date"
-                  />
-                </div>
-                <div className="ip-group">
-                  <DropdownSelect
-                    defaultOption="Select"
-                    options={["Today", "Yesterday"]}
-                  />
-                </div>
+              <div className="d-flex align-items-center justify-content-between mb-3">
+                <h5 className="title" style={{ marginBottom: 0 }}>Tin đăng gần đây</h5>
+                <Link href="/my-property" className="tf-btn btn-line" style={{ fontSize: 13, padding: "6px 14px" }}>
+                  Xem tất cả
+                </Link>
               </div>
-              <div className="d-flex gap-4">
-                <span className="text-primary fw-7">26</span>
-                <span className="fw-6">Results found</span>
-              </div>
-              <div className="wrap-table">
-                <div className="table-responsive">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Listing</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {properties2.slice(1, 6).map((elm, i) => (
-                        <tr key={i} className="file-delete">
-                          <td>
-                            <div className="listing-box">
-                              <div className="images">
-                                <Image
-                                  alt="images"
-                                  src={elm.imgSrc}
-                                  width={615}
-                                  height={405}
-                                />
-                              </div>
-                              <div className="content">
-                                <div className="title">
-                                  <Link
-                                    href={`/property-details-v1/${elm.id}`}
-                                    className="link"
-                                  >
-                                    {elm.title}
-                                  </Link>
-                                </div>
-                                <div className="text-date">
-                                  Posting date: March 22, 2024
-                                </div>
-                                <div className="text-btn text-primary">
-                                  ${elm.price.toLocaleString()}
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <div className="status-wrap">
-                              <a
-                                href="#"
-                                className={`btn-status ${elm.status == "Pending" ? "pending" : ""
-                                  }  ${elm.status == "Sold" ? "sold" : ""}`}
-                              >
-                                {" "}
-                                {elm.status}
-                              </a>
-                            </div>
-                          </td>
-                          <td>
-                            <ul className="list-action">
-                              <li>
-                                <a className="item">
-                                  <svg
-                                    width={16}
-                                    height={16}
-                                    viewBox="0 0 16 16"
-                                    fill="none"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                  >
-                                    <path
-                                      d="M11.2413 2.9915L12.366 1.86616C12.6005 1.63171 12.9184 1.5 13.25 1.5C13.5816 1.5 13.8995 1.63171 14.134 1.86616C14.3685 2.10062 14.5002 2.4186 14.5002 2.75016C14.5002 3.08173 14.3685 3.39971 14.134 3.63416L4.55467 13.2135C4.20222 13.5657 3.76758 13.8246 3.29 13.9668L1.5 14.5002L2.03333 12.7102C2.17552 12.2326 2.43442 11.7979 2.78667 11.4455L11.242 2.9915H11.2413ZM11.2413 2.9915L13 4.75016"
-                                      stroke="#A3ABB0"
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                    />
-                                  </svg>
-                                  Edit
-                                </a>
-                              </li>
-                              <li>
-                                <a className="item">
-                                  <svg
-                                    width={16}
-                                    height={16}
-                                    viewBox="0 0 16 16"
-                                    fill="none"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                  >
-                                    <path
-                                      d="M12.2427 12.2427C13.3679 11.1175 14.0001 9.59135 14.0001 8.00004C14.0001 6.40873 13.3679 4.8826 12.2427 3.75737C11.1175 2.63214 9.59135 2 8.00004 2C6.40873 2 4.8826 2.63214 3.75737 3.75737M12.2427 12.2427C11.1175 13.3679 9.59135 14.0001 8.00004 14.0001C6.40873 14.0001 4.8826 13.3679 3.75737 12.2427C2.63214 11.1175 2 9.59135 2 8.00004C2 6.40873 2.63214 4.8826 3.75737 3.75737M12.2427 12.2427L3.75737 3.75737"
-                                      stroke="#A3ABB0"
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                    />
-                                  </svg>
-                                  Sold
-                                </a>
-                              </li>
-                              <li>
-                                <a className="remove-file item">
-                                  <svg
-                                    width={16}
-                                    height={16}
-                                    viewBox="0 0 16 16"
-                                    fill="none"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                  >
-                                    <path
-                                      d="M9.82667 6.00035L9.596 12.0003M6.404 12.0003L6.17333 6.00035M12.8187 3.86035C13.0467 3.89501 13.2733 3.93168 13.5 3.97101M12.8187 3.86035L12.1067 13.1157C12.0776 13.4925 11.9074 13.8445 11.63 14.1012C11.3527 14.3579 10.9886 14.5005 10.6107 14.5003H5.38933C5.0114 14.5005 4.64735 14.3579 4.36999 14.1012C4.09262 13.8445 3.92239 13.4925 3.89333 13.1157L3.18133 3.86035M12.8187 3.86035C12.0492 3.74403 11.2758 3.65574 10.5 3.59568M3.18133 3.86035C2.95333 3.89435 2.72667 3.93101 2.5 3.97035M3.18133 3.86035C3.95076 3.74403 4.72416 3.65575 5.5 3.59568M10.5 3.59568V2.98501C10.5 2.19835 9.89333 1.54235 9.10667 1.51768C8.36908 1.49411 7.63092 1.49411 6.89333 1.51768C6.10667 1.54235 5.5 2.19901 5.5 2.98501V3.59568M10.5 3.59568C8.83581 3.46707 7.16419 3.46707 5.5 3.59568"
-                                      stroke="#A3ABB0"
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                    />
-                                  </svg>
-                                  Delete
-                                </a>
-                              </li>
-                            </ul>
-                          </td>
+
+              {loading ? (
+                <p style={{ color: "#94a3b8", padding: "20px 0" }}>Đang tải...</p>
+              ) : recentProps.length === 0 ? (
+                <div style={{ padding: "32px 0", textAlign: "center", color: "#94a3b8" }}>
+                  <p>Bạn chưa có tin đăng nào.</p>
+                  <Link href="/add-property" className="tf-btn primary" style={{ marginTop: 12, display: "inline-block" }}>
+                    Đăng tin ngay
+                  </Link>
+                </div>
+              ) : (
+                <div className="wrap-table">
+                  <div className="table-responsive">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Tin đăng</th>
+                          <th>Trạng thái</th>
+                          <th>Thao tác</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {recentProps.map(p => {
+                          const img = p.property_images?.[0]?.url || "/images/home/house-1.jpg";
+                          const statusStyle = STATUS_COLORS[p.approval_status] || STATUS_COLORS.pending;
+                          const href = p.slug ? `/property-details/${p.slug}` : "#";
+                          return (
+                            <tr key={p.id} className="file-delete">
+                              <td>
+                                <div className="listing-box">
+                                  <div className="images" style={{ width: 80, height: 56, flexShrink: 0, borderRadius: 8, overflow: "hidden", position: "relative" }}>
+                                    <Image
+                                      alt={p.title}
+                                      src={img}
+                                      fill
+                                      sizes="80px"
+                                      style={{ objectFit: "cover" }}
+                                    />
+                                  </div>
+                                  <div className="content">
+                                    <div className="title">
+                                      <Link href={href} className="link" title={p.title}>
+                                        {p.title?.length > 45 ? p.title.slice(0, 45) + "…" : p.title}
+                                      </Link>
+                                    </div>
+                                    <div className="text-date">
+                                      Đăng: {new Date(p.created_at).toLocaleDateString("vi-VN")}
+                                    </div>
+                                    <div className="text-btn text-primary">
+                                      {formatPrice(p.price)}
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td>
+                                <div className="status-wrap">
+                                  <span
+                                    style={{
+                                      display: "inline-block",
+                                      padding: "4px 12px",
+                                      borderRadius: 99,
+                                      fontSize: 12,
+                                      fontWeight: 600,
+                                      background: statusStyle.bg,
+                                      color: statusStyle.color,
+                                    }}
+                                  >
+                                    {STATUS_LABELS[p.approval_status] || "Chờ duyệt"}
+                                  </span>
+                                </div>
+                              </td>
+                              <td>
+                                <ul className="list-action">
+                                  <li>
+                                    {p.approval_status === "approved" ? (
+                                      <span
+                                        className="item"
+                                        title="Tin đã duyệt không thể chỉnh sửa"
+                                        style={{ opacity: 0.35, cursor: "not-allowed", pointerEvents: "none", display: "inline-flex", alignItems: "center", gap: 4 }}
+                                      >
+                                        <svg width={16} height={16} viewBox="0 0 16 16" fill="none">
+                                          <path d="M11.2413 2.9915L12.366 1.86616C12.6005 1.63171 12.9184 1.5 13.25 1.5C13.5816 1.5 13.8995 1.63171 14.134 1.86616C14.3685 2.10062 14.5002 2.4186 14.5002 2.75016C14.5002 3.08173 14.3685 3.39971 14.134 3.63416L4.55467 13.2135C4.20222 13.5657 3.76758 13.8246 3.29 13.9668L1.5 14.5002L2.03333 12.7102C2.17552 12.2326 2.43442 11.7979 2.78667 11.4455L11.242 2.9915H11.2413ZM11.2413 2.9915L13 4.75016" stroke="#A3ABB0" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                        Sửa
+                                      </span>
+                                    ) : (
+                                      <Link href={`/add-property?edit=${p.id}`} className="item">
+                                        <svg width={16} height={16} viewBox="0 0 16 16" fill="none">
+                                          <path d="M11.2413 2.9915L12.366 1.86616C12.6005 1.63171 12.9184 1.5 13.25 1.5C13.5816 1.5 13.8995 1.63171 14.134 1.86616C14.3685 2.10062 14.5002 2.4186 14.5002 2.75016C14.5002 3.08173 14.3685 3.39971 14.134 3.63416L4.55467 13.2135C4.20222 13.5657 3.76758 13.8246 3.29 13.9668L1.5 14.5002L2.03333 12.7102C2.17552 12.2326 2.43442 11.7979 2.78667 11.4455L11.242 2.9915H11.2413ZM11.2413 2.9915L13 4.75016" stroke="#A3ABB0" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                        Sửa
+                                      </Link>
+                                    )}
+                                  </li>
+                                </ul>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-                <ul className="wd-navigation">
-                  <Pagination2 />
-                </ul>
-              </div>
+              )}
             </div>
+
+            {/* ── Chart ── */}
             <div className="widget-box-2 wd-chart">
-              <h5 className="title">Page Inside</h5>
-              <div className="wd-filter-date">
-                <div className="left">
-                  <div className="dates active">Day</div>
-                  <div className="dates">Week</div>
-                  <div className="dates">Month</div>
-                  <div className="dates">Year</div>
-                </div>
-                <div className="right">
-                  <div className="ip-group icon">
-                    <input
-                      type="text"
-                      id="datepicker3"
-                      className="ip-datepicker icon"
-                      placeholder="From Date"
-                    />
-                  </div>
-                  <div className="ip-group icon">
-                    <input
-                      type="text"
-                      id="datepicker4"
-                      className="ip-datepicker icon"
-                      placeholder="To Date"
-                    />
-                  </div>
-                </div>
+              <div className="d-flex align-items-center justify-content-between mb-2">
+                <h5 className="title" style={{ marginBottom: 0 }}>Lượt xem tin đăng</h5>
+                {!loading && (
+                  <span style={{ fontSize: 13, color: "#64748b" }}>
+                    Tổng: <strong>{viewChart.data.reduce((a, b) => a + b, 0)}</strong> lượt (12 tháng)
+                  </span>
+                )}
               </div>
               <div className="chart-box">
-                <LineChart />
+                {loading ? (
+                  <p style={{ color: "#94a3b8", fontSize: 13 }}>Đang tải...</p>
+                ) : (
+                  <LineChart data={viewChart.data} labels={viewChart.labels} />
+                )}
               </div>
             </div>
           </div>
+
           <div className="col-xl-3">
             <UserPreferences />
+
+            {/* ── Đánh giá gần đây ── */}
             <div className="widget-box-2 mess-box">
-              <h5 className="title">Recent Reviews</h5>
-              <ul className="list-mess">
-                <li className="mess-item">
-                  <div className="user-box">
-                    <div className="avatar">
-                      <Image
-                        alt="avt"
-                        src="/images/avatar/avt-png13.png"
-                        width={51}
-                        height={51}
-                      />
-                    </div>
-                    <div className="content">
-                      <div className="name fw-6">Bessie Cooper</div>
-                      <span className="caption-2 text-variant-3">
-                        3 day ago
-                      </span>
-                    </div>
-                  </div>
-                  <p>
-                    Maecenas eu lorem et urna accumsan vestibulum vel vitae
-                    magna.
-                  </p>
-                  <ul className="list-star">
-                    <li className="icon icon-star" />
-                    <li className="icon icon-star" />
-                    <li className="icon icon-star" />
-                    <li className="icon icon-star" />
-                    <li className="icon icon-star" />
-                  </ul>
-                </li>
-                <li className="mess-item">
-                  <div className="user-box">
-                    <div className="avatar">
-                      <Image
-                        alt="avt"
-                        src="/images/avatar/avt-png14.png"
-                        width={68}
-                        height={68}
-                      />
-                    </div>
-                    <div className="content">
-                      <div className="name fw-6">Annette Black</div>
-                      <span className="caption-2 text-variant-3">
-                        3 day ago
-                      </span>
-                    </div>
-                  </div>
-                  <p>
-                    Nullam rhoncus dolor arcu, et commodo tellus semper vitae.
-                    Aenean finibus tristique lectus, ac lobortis mauris
-                    venenatis ac.
-                  </p>
-                  <ul className="list-star">
-                    <li className="icon icon-star" />
-                    <li className="icon icon-star" />
-                    <li className="icon icon-star" />
-                    <li className="icon icon-star" />
-                    <li className="icon icon-star" />
-                  </ul>
-                </li>
-                <li className="mess-item">
-                  <div className="user-box">
-                    <div className="avatar">
-                      <Image
-                        alt="avt"
-                        src="/images/avatar/avt-png15.png"
-                        width={51}
-                        height={51}
-                      />
-                    </div>
-                    <div className="content">
-                      <div className="name fw-6">Ralph Edwards</div>
-                      <span className="caption-2 text-variant-3">
-                        3 day ago
-                      </span>
-                    </div>
-                  </div>
-                  <p>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                    Vivamus viverra semper convallis. Integer vestibulum tempus
-                    tincidunt.
-                  </p>
-                  <ul className="list-star">
-                    <li className="icon icon-star" />
-                    <li className="icon icon-star" />
-                    <li className="icon icon-star" />
-                    <li className="icon icon-star" />
-                    <li className="icon icon-star" />
-                  </ul>
-                </li>
-                <li className="mess-item">
-                  <div className="user-box">
-                    <div className="avatar">
-                      <Image
-                        alt="avt"
-                        src="/images/avatar/avt-png16.png"
-                        width={51}
-                        height={51}
-                      />
-                    </div>
-                    <div className="content">
-                      <div className="name fw-6">Jerome Bell</div>
-                      <span className="caption-2 text-variant-3">
-                        3 day ago
-                      </span>
-                    </div>
-                  </div>
-                  <p>
-                    Fusce sit amet purus eget quam eleifend hendrerit nec a
-                    erat. Sed turpis neque, iaculis blandit viverra ut, dapibus
-                    eget nisi.
-                  </p>
-                  <ul className="list-star">
-                    <li className="icon icon-star" />
-                    <li className="icon icon-star" />
-                    <li className="icon icon-star" />
-                    <li className="icon icon-star" />
-                    <li className="icon icon-star" />
-                  </ul>
-                </li>
-                <li className="mess-item">
-                  <div className="user-box">
-                    <div className="avatar">
-                      <Image
-                        alt="avt"
-                        src="/images/avatar/avt-png17.png"
-                        width={51}
-                        height={51}
-                      />
-                    </div>
-                    <div className="content">
-                      <div className="name fw-6">Albert Flores</div>
-                      <span className="caption-2 text-variant-3">
-                        3 day ago
-                      </span>
-                    </div>
-                  </div>
-                  <p>
-                    Donec bibendum nibh quis nisl luctus, at aliquet ipsum
-                    bibendum. Fusce at dui tincidunt nulla semper venenatis at
-                    et magna. Mauris turpis lorem, ultricies vel justo sed.
-                  </p>
-                  <ul className="list-star">
-                    <li className="icon icon-star" />
-                    <li className="icon icon-star" />
-                    <li className="icon icon-star" />
-                    <li className="icon icon-star" />
-                    <li className="icon icon-star" />
-                  </ul>
-                </li>
-              </ul>
+              <h5 className="title">Đánh giá gần đây</h5>
+              {loading ? (
+                <p style={{ color: "#94a3b8", fontSize: 13 }}>Đang tải...</p>
+              ) : recentReviews.length === 0 ? (
+                <p style={{ color: "#94a3b8", fontSize: 13 }}>Chưa có đánh giá nào.</p>
+              ) : (
+                <ul className="list-mess">
+                  {recentReviews.map(r => {
+                    const name = r.profiles?.full_name || r.author_name || "Ẩn danh";
+                    const avatar = r.profiles?.avatar_url;
+                    return (
+                      <li key={r.id} className="mess-item">
+                        <div className="user-box">
+                          <div className="avatar">
+                            {avatar ? (
+                              <Image alt="avt" src={avatar} width={51} height={51} style={{ borderRadius: "50%", objectFit: "cover" }} />
+                            ) : (
+                              <div style={{ width: 51, height: 51, borderRadius: "50%", background: "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 18, color: "#64748b" }}>
+                                {name[0]?.toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                          <div className="content">
+                            <div className="name fw-6">{name}</div>
+                            <span className="caption-2 text-variant-3">
+                              {new Date(r.created_at).toLocaleDateString("vi-VN")}
+                            </span>
+                          </div>
+                        </div>
+                        <p style={{ fontSize: 13, color: "#374151", marginTop: 6, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                          {r.content}
+                        </p>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </div>
           </div>
         </div>
       </div>
+
       <div className="footer-dashboard">
         <p>Copyright © 2024 Home Lengo</p>
       </div>

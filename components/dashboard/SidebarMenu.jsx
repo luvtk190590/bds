@@ -30,16 +30,16 @@ export default function SidebarMenu() {
     const mobileNavToggler = document.querySelector(".mobile-nav-toggler");
     const overlayDashboard = document.querySelector(".overlay-dashboard");
 
-    mobileNavToggler.addEventListener("click", removeFullWidth);
-    overlayDashboard.addEventListener("click", removeFullWidth);
+    mobileNavToggler?.addEventListener("click", removeFullWidth);
+    overlayDashboard?.addEventListener("click", removeFullWidth);
 
     // Cleanup event listeners when component unmounts
     return () => {
       buttonsShowHide.forEach((button) =>
         button.removeEventListener("click", toggleFullWidth)
       );
-      mobileNavToggler.removeEventListener("click", removeFullWidth);
-      overlayDashboard.removeEventListener("click", removeFullWidth);
+      mobileNavToggler?.removeEventListener("click", removeFullWidth);
+      overlayDashboard?.removeEventListener("click", removeFullWidth);
     };
   }, []);
   const pathname = usePathname();

@@ -20,13 +20,13 @@ export default function LeatestProperties({ excludeId }) {
           const href = `/property-details/${p.slug || p.id}`;
           return (
             <li key={p.id} className="latest-property-item">
-              <Link href={href} className="images-style">
+              <Link href={href} className="images-style" style={{ display: "block", flexShrink: 0 }}>
                 <Image
                   alt={p.title}
                   src={img}
-                  width={615}
-                  height={405}
-                  style={{ objectFit: "cover", width: "100%", height: "100%" }}
+                  fill
+                  sizes="112px"
+                  style={{ objectFit: "cover" }}
                 />
               </Link>
               <div className="content">
