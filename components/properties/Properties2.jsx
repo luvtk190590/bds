@@ -507,6 +507,9 @@ export default function Properties2() {
                           </ul>
                         </div>
                         <div className="content-bottom">
+                          <h6 className="price">
+                            ${elm.price.toLocaleString()}
+                          </h6>
                           <div className="d-flex gap-8 align-items-center">
                             <div className="avatar avt-40 round">
                               <Image
@@ -518,9 +521,6 @@ export default function Properties2() {
                             </div>
                             <span>{elm.agent}</span>
                           </div>
-                          <h6 className="price">
-                            ${elm.price.toLocaleString()}
-                          </h6>
                         </div>
                       </div>
                     </div>
@@ -615,6 +615,9 @@ export default function Properties2() {
                           </div>
                         </div>
                         <div className="content-bottom">
+                          <h6 className="price">
+                            ${elm.price.toLocaleString()}
+                          </h6>
                           <div className="d-flex gap-8 align-items-center">
                             <div className="avatar avt-40 round">
                               <Image
@@ -626,9 +629,6 @@ export default function Properties2() {
                             </div>
                             <span>{elm.agent}</span>
                           </div>
-                          <h6 className="price">
-                            ${elm.price.toLocaleString()}
-                          </h6>
                         </div>
                       </div>
                     </div>

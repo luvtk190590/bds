@@ -83,7 +83,8 @@
       "WebFetch(domain:wiki.batdongsan.com.vn)",
       "WebFetch(domain:www.seabank.com.vn)",
       "WebFetch(domain:luatvietnam.vn)",
-      "WebFetch(domain:techcombank.com)"
+      "WebFetch(domain:techcombank.com)",
+      "Bash(find \"/h/Project vibe code/sanchuyennhuong/homelengo/components\" -type f -name \"*.jsx\" 2>/dev/null | sort)"
     ]
   }
 }

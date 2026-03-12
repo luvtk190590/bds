@@ -77,19 +77,6 @@ export default function PropertyCard({ property, onFavoriteToggle, isFavorited =
                 </div>
             </div>
             <div className="archive-bottom d-flex justify-content-between align-items-center">
-                <div className="d-flex gap-2 align-items-center">
-                    {property.owner_name && (
-                        <span className="small text-muted">{property.owner_name}</span>
-                    )}
-                    {property.property_type_name && (
-                        <span
-                            className="badge bg-light text-dark"
-                            style={{ fontSize: "11px" }}
-                        >
-                            {property.property_type_name}
-                        </span>
-                    )}
-                </div>
                 <div className="d-flex align-items-center gap-1">
                     {property.listing_type && (
                         <span
@@ -108,6 +95,19 @@ export default function PropertyCard({ property, onFavoriteToggle, isFavorited =
                     <h6 className="price" style={{ color: "#e74c3c", margin: 0 }}>
                         {formatPriceWithUnit(property.price, property.listing_type)}
                     </h6>
+                </div>
+                <div className="d-flex gap-2 align-items-center">
+                    {property.owner_name && (
+                        <span className="small text-muted">{property.owner_name}</span>
+                    )}
+                    {property.property_type_name && (
+                        <span
+                            className="badge bg-light text-dark"
+                            style={{ fontSize: "11px" }}
+                        >
+                            {property.property_type_name}
+                        </span>
+                    )}
                 </div>
             </div>
         </div>

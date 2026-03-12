@@ -211,22 +211,11 @@ function RecommendedCard({ property, onFavorite, isFav }) {
                         )}
                     </div>
 
-                    {/* Owner Info */}
-                    <div className="d-flex align-items-center gap-2 pt-2 border-top">
-                        <div
-                            className="avatar round overflow-hidden"
-                            style={{ width: '24px', height: '24px', position: 'relative' }}
-                        >
-                            <img
-                                src={property.owner_avatar || "/images/avatar/avt-1.jpg"}
-                                alt="avt"
-                                onError={(e) => { e.currentTarget.src = "/images/avatar/avt-1.jpg" }}
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                            />
-                        </div>
-                        <span className="text-muted" style={{ fontSize: '11px' }}>
-                            {property.owner_name || "Chủ nhà"}
-                        </span>
+                    {/* Giá */}
+                    <div className="pt-2 border-top mb-1">
+                        <strong style={{ color: "#e74c3c", fontSize: "14px" }}>
+                            {formatPriceWithUnit(property.price, property.listing_type)}
+                        </strong>
                     </div>
                 </div>
             </div>
@@ -246,9 +235,23 @@ function RecommendedCard({ property, onFavorite, isFav }) {
                         {property.listing_type === "sale" ? "Bán" : "Cho thuê"}
                     </span>
                 )}
-                <strong style={{ color: "#e74c3c", fontSize: "14px" }}>
-                    {formatPriceWithUnit(property.price, property.listing_type)}
-                </strong>
+                {/* Owner Info */}
+                <div className="d-flex align-items-center gap-2">
+                    <div
+                        className="avatar round overflow-hidden"
+                        style={{ width: '24px', height: '24px', position: 'relative' }}
+                    >
+                        <img
+                            src={property.owner_avatar || "/images/avatar/avt-1.jpg"}
+                            alt="avt"
+                            onError={(e) => { e.currentTarget.src = "/images/avatar/avt-1.jpg" }}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                    </div>
+                    <span className="text-muted" style={{ fontSize: '11px' }}>
+                        {property.owner_name || "Chủ nhà"}
+                    </span>
+                </div>
             </div>
         </div >
     );
