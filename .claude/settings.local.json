@@ -84,7 +84,25 @@
       "WebFetch(domain:www.seabank.com.vn)",
       "WebFetch(domain:luatvietnam.vn)",
       "WebFetch(domain:techcombank.com)",
-      "Bash(find \"/h/Project vibe code/sanchuyennhuong/homelengo/components\" -type f -name \"*.jsx\" 2>/dev/null | sort)"
+      "Bash(find \"/h/Project vibe code/sanchuyennhuong/homelengo/components\" -type f -name \"*.jsx\" 2>/dev/null | sort)",
+      "Bash(psql \"postgresql://postgres:qfWl1S65IppYNP7i@db.rqjapqhhsdenshlhxskw.supabase.co:5432/postgres\" -c \"\\\\dt public.menu_items\" 2>&1 | head -5)",
+      "Bash(node --version 2>&1 && npm list pg 2>&1 | head -3)",
+      "Bash(cd \"H:/Project vibe code/sanchuyennhuong/homelengo\" && node scripts/seed_cms.js 2>&1)",
+      "Bash(cd \"H:/Project vibe code/sanchuyennhuong/homelengo\" && node scripts/verify_cms.js 2>&1)",
+      "Bash(cd \"H:/Project vibe code/sanchuyennhuong/homelengo\" && node scripts/seed_logo.js 2>&1)",
+      "Bash(cd \"H:/Project vibe code/sanchuyennhuong/homelengo\" && node -e \"\nconst fs = require\\('fs'\\);\n// Check for obvious syntax issues\n['components/footer/Footer1.jsx', 'components/headers/Header1.jsx', 'app/admin/footer/page.jsx'].forEach\\(f => {\n  const content = fs.readFileSync\\(f, 'utf8'\\);\n  const opens = \\(content.match\\(/\\\\{/g\\) || []\\).length;\n  const closes = \\(content.match\\(/\\\\}/g\\) || []\\).length;\n  console.log\\(f.split\\('/'\\).pop\\(\\).padEnd\\(25\\), 'braces OK:', Math.abs\\(opens-closes\\) < 5 ? '✅' : '⚠️ diff='+\\(opens-closes\\)\\);\n}\\);\n\" 2>&1)",
+      "Bash(find \"H:\\\\Project vibe code\\\\sanchuyennhuong\\\\homelengo/app/\\(other-pages\\)\" -name \"page.jsx\" -type f)",
+      "Bash(find \"H:\\\\Project vibe code\\\\sanchuyennhuong\\\\homelengo/app/admin\" -type f -name \"*.jsx\" 2>/dev/null | head -20)",
+      "Bash(cd \"H:/Project vibe code/sanchuyennhuong/homelengo\" && node scripts/run_041.js 2>&1)",
+      "Bash(ls \"H:/Project vibe code/sanchuyennhuong/homelengo/app/\\(blogs\\)/\" && ls \"H:/Project vibe code/sanchuyennhuong/homelengo/app/p/\")",
+      "Bash(find \"H:/Project vibe code/sanchuyennhuong/homelengo/app/p\" -name \"*.jsx\" -o -name \"*.js\" 2>/dev/null; find \"H:/Project vibe code/sanchuyennhuong/homelengo/app/\\(blogs\\)/blog-detail\" -name \"*.jsx\" 2>/dev/null)",
+      "Bash(ls \"H:/Project vibe code/sanchuyennhuong/homelengo/app/\\(other-pages\\)/\" 2>/dev/null; cat \"H:/Project vibe code/sanchuyennhuong/homelengo/app/\\(blogs\\)/blog-detail/[id]/page.jsx\" | head -5)",
+      "Bash(grep -r \"flat-title-page\" \"H:/Project vibe code/sanchuyennhuong/homelengo/app/\\(other-pages\\)\" --include=\"*.jsx\" -l 2>/dev/null | head -3)",
+      "Bash(ls \"H:/Project vibe code/sanchuyennhuong/homelengo/app/\\(other-pages\\)/about-us/\" 2>/dev/null)",
+      "mcp__ide__getDiagnostics",
+      "Bash(grep -rn \"property_types\\\\|propertyTypes\\\\|property_type\" \"H:/Project vibe code/sanchuyennhuong/homelengo/data/\" --include=\"*.js\" -l 2>/dev/null; grep -rn \"property_type\" \"H:/Project vibe code/sanchuyennhuong/homelengo/lib/\" --include=\"*.js\" | head -10)",
+      "Bash(find \"H:/Project vibe code/sanchuyennhuong/homelengo/public\" -name \"*.css\" -path \"*/icons/*\" 2>/dev/null | head -5; find \"H:/Project vibe code/sanchuyennhuong/homelengo/public\" -name \"flaticon*\" -o -name \"icon-font*\" 2>/dev/null | head -10)",
+      "Bash(sed -i 's/icon-add/icon-plus/g' \\\\\n  \"H:/Project vibe code/sanchuyennhuong/homelengo/app/admin/blog/page.jsx\" \\\\\n  \"H:/Project vibe code/sanchuyennhuong/homelengo/app/admin/pages/page.jsx\"\n\nsed -i 's/icon-close\\\\b/icon-close2/g' \\\\\n  \"H:/Project vibe code/sanchuyennhuong/homelengo/app/admin/properties/page.jsx\" \\\\\n  \"H:/Project vibe code/sanchuyennhuong/homelengo/app/admin/users/page.jsx\" \\\\\n  \"H:/Project vibe code/sanchuyennhuong/homelengo/components/admin/properties/PropertyApprovalActions.jsx\" \\\\\n  \"H:/Project vibe code/sanchuyennhuong/homelengo/components/admin/users/VerificationActions.jsx\"\n\nsed -i 's/icon-upload/icon-send/g; s/icon-check/icon-tick1/g' \\\\\n  \"H:/Project vibe code/sanchuyennhuong/homelengo/app/admin/media/page.jsx\"\n\nsed -i 's/icon-menu-fold/icon-list-dashes/g' \\\\\n  \"H:/Project vibe code/sanchuyennhuong/homelengo/app/admin/menu/page.jsx\")"
     ]
   }
 }

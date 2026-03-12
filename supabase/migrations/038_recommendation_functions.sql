@@ -120,14 +120,7 @@ BEGIN
       p.area,
       p.bedrooms,
       p.address,
-      COALESCE(
-        (SELECT pi.url FROM public.property_images pi
-         WHERE pi.property_id = p.id AND pi.is_primary = true
-         LIMIT 1),
-        (SELECT pi.url FROM public.property_images pi
-         WHERE pi.property_id = p.id
-         ORDER BY pi.sort_order LIMIT 1)
-      ) AS image_url,
+      img.url AS image_url,
 
       -- Tính điểm
       (
@@ -150,6 +143,12 @@ BEGIN
 
     FROM public.properties p
     LEFT JOIN public.profiles pr ON pr.id = p.owner_id
+    LEFT JOIN LATERAL (
+      SELECT url FROM public.property_images
+      WHERE property_id = p.id
+      ORDER BY is_primary DESC, id ASC
+      LIMIT 1
+    ) img ON true
     WHERE
       p.approval_status = 'approved'
       AND p.id NOT IN (

@@ -84,7 +84,7 @@ export default function PropertyApprovalActions({ property, onDone, onClose }) {
             <i className="icon icon-check-circle" /> Duyệt tin
           </button>
           <button className="admin-btn btn-danger" onClick={reject} disabled={loading}>
-            <i className="icon icon-close" /> Từ chối
+            <i className="icon icon-close2" /> Từ chối
           </button>
         </div>
       </div>

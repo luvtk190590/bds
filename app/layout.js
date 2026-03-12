@@ -31,8 +31,8 @@ export default function RootLayout({ children }) {
   }, [pathname]);
 
   return (
-    <html lang="vi">
-      <body className="body">
+    <html lang="vi" suppressHydrationWarning>
+      <body className="body" suppressHydrationWarning>
         <AuthProvider>
           <div id="wrapper">
             <div id="pagee" className="clearfix">

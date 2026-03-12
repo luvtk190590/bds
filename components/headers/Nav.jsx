@@ -1,11 +1,12 @@
 "use client";
-import { menuItems } from "@/data/menu";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
+import { useMenuItems } from "@/lib/hooks/useCmsData";
 
 export default function Nav() {
   const pathname = usePathname();
+  const menuItems = useMenuItems("main");
 
   return (
     <>
@@ -28,7 +29,10 @@ export default function Nav() {
                   pathname === link.href.split("?")[0] ? "current" : ""
                 }
               >
-                <Link href={link.href}>{link.label}</Link>
+                <Link
+                  href={link.href}
+                  {...(link.newTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                >{link.label}</Link>
               </li>
             ))}
           </ul>

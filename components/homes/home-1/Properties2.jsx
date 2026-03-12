@@ -90,6 +90,9 @@ export default function Properties2() {
           </ul>
         </div>
         <div className="content-bottom">
+          <h6 className="price">
+            {formatPriceWithUnit(property.price, property.listing_type)}
+          </h6>
           <div className="d-flex gap-8 align-items-center">
             <div className="avatar avt-40 round" style={{ position: 'relative', overflow: 'hidden' }}>
               <img
@@ -101,9 +104,6 @@ export default function Properties2() {
             </div>
             <span>{property.owner_name || "Chủ nhà"}</span>
           </div>
-          <h6 className="price">
-            {formatPriceWithUnit(property.price, property.listing_type)}
-          </h6>
         </div>
       </div>
     </div>

@@ -184,7 +184,7 @@ export default function VerificationActions({ user, verRequest, onRefresh }) {
                     <i className="icon icon-check-circle" /> Xác minh
                   </button>
                   <button className="admin-btn btn-danger" onClick={reject} disabled={loading}>
-                    <i className="icon icon-close" /> Từ chối
+                    <i className="icon icon-close2" /> Từ chối
                   </button>
                 </div>
               </>

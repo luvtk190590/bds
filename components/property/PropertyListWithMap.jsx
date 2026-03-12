@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/hooks/useAuth";
 import { useFavorites } from "@/lib/hooks/useRecommendations";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { trackFilterUsage } from "@/lib/utils/trackFilter";
 
 export default function PropertyListWithMap() {
     const searchParams = useSearchParams();
@@ -61,6 +62,16 @@ export default function PropertyListWithMap() {
 
     const { profile } = useAuth();
     const { toggleFavorite, isFavorited } = useFavorites(profile?.id);
+
+    // Ghi lại sở thích tìm kiếm sau 1.5s khi filter thay đổi
+    useEffect(() => {
+        if (!profile?.id) return;
+        const timer = setTimeout(() => {
+            trackFilterUsage(profile.id, filters);
+        }, 1500);
+        return () => clearTimeout(timer);
+    }, [filters.listingType, filters.propertyType, filters.minPrice, filters.maxPrice,
+        filters.province, filters.district, filters.minBedrooms, profile?.id]);
 
     return (
         <div className="container-fluid px-0">

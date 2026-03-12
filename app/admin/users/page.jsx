@@ -166,7 +166,7 @@ function UsersContent() {
               <i className="icon icon-check-circle" /> Xác minh tất cả
             </button>
             <button className="admin-btn btn-outline btn-sm" onClick={bulkReject} disabled={bulkLoading}>
-              <i className="icon icon-close" /> Từ chối tất cả
+              <i className="icon icon-close2" /> Từ chối tất cả
             </button>
             <div className="bulk-sep" />
             <button className="admin-btn btn-danger btn-sm" onClick={bulkDelete} disabled={bulkLoading}>

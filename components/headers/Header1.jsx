@@ -7,13 +7,17 @@ import MobileNav from "./MobileNav";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import VerificationModal, { getModalStep } from "@/components/modals/VerificationModal";
+import { useSiteSettings } from "@/lib/hooks/useCmsData";
 
 export default function Header1({
   parentClass = "main-header header-fixed fixed-header",
 }) {
   const [isFixed, setIsFixed] = useState(false);
   const [verModalOpen, setVerModalOpen] = useState(false);
-  const { profile, isAuthenticated, signOut, isAdmin } = useAuth();
+  const { profile, isAuthenticated, signOut, isAdmin, loading } = useAuth();
+  const settings = useSiteSettings();
+  const logoDark  = settings.logo_dark  || "/images/logo/logo@2x.png";
+  const logoWhite = settings.logo_white || "/images/logo/logo@2x-white.png";
   const router = useRouter();
 
   useEffect(() => {
@@ -67,8 +71,8 @@ export default function Header1({
                   <div className="logo-box flex">
                     <div className="logo">
                       <Link href="/">
-                        <Image alt="logo" width={166} className="logo-1" height={48} src="/images/logo/logo@2x.png" />
-                        <Image alt="logo" width={166} className="logo-2" height={48} src="/images/logo/logo@2x-white.png" />
+                        <Image alt="logo" width={166} className="logo-1" height={48} src={logoDark} />
+                        <Image alt="logo" width={166} className="logo-2" height={48} src={logoWhite} />
                       </Link>
                     </div>
                   </div>
@@ -84,7 +88,9 @@ export default function Header1({
                 </div>
 
                 <div className="inner-header-right header-account">
-                  {isAuthenticated ? (
+                  {loading ? (
+                    <div style={{ width: 90, height: 34 }} />
+                  ) : isAuthenticated ? (
                     <div className="d-flex align-items-center gap-10">
                       <div className="dropdown">
                         <a
@@ -174,7 +180,7 @@ export default function Header1({
           <nav className="menu-box">
             <div className="nav-logo">
               <Link href="/">
-                <Image alt="nav-logo" width={174} height={44} src="/images/logo/logo@2x.png" />
+                <Image alt="nav-logo" width={174} height={44} src={logoDark} />
               </Link>
             </div>
             <div className="bottom-canvas">

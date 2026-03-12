@@ -3,12 +3,15 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useProperties } from "@/lib/hooks/useProperties";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { trackFilterUsage } from "@/lib/utils/trackFilter";
 import { formatPriceWithUnit, formatArea } from "@/lib/utils/formatters";
 
 const filterOptions = ["View All", "Sale", "Rent"];
 
 export default function Properties() {
   const [selectedOption, setSelectedOption] = useState("View All");
+  const { profile } = useAuth();
 
   const { properties, isLoading, error } = useProperties({
     filterListing: selectedOption === "Sale" ? "sale" : selectedOption === "Rent" ? "rent" : null,
@@ -30,7 +33,11 @@ export default function Properties() {
           <ul className="nav-tab-recommended justify-content-md-center">
             {filterOptions.map((option, index) => (
               <li
-                onClick={() => setSelectedOption(option)}
+                onClick={() => {
+                  setSelectedOption(option);
+                  const lt = option === "Sale" ? "sale" : option === "Rent" ? "rent" : null;
+                  if (lt) trackFilterUsage(profile?.id, { listingType: lt });
+                }}
                 key={index}
                 className="nav-tab-item"
               >
@@ -45,12 +52,10 @@ export default function Properties() {
           </ul>
           <div className="tab-content">
             <div className="tab-pane active show">
-              {isLoading ? (
+              {isLoading && properties.length === 0 ? (
                 <div className="text-center py-5">
                   <div className="spinner-border text-primary" role="status"></div>
                 </div>
-              ) : error ? (
-                <div className="text-center py-5 text-danger">Lỗi tải dữ liệu.</div>
               ) : properties.length === 0 ? (
                 <div className="text-center py-5">Không tìm thấy bất động sản nào.</div>
               ) : (
@@ -125,6 +130,9 @@ export default function Properties() {
                             </ul>
                           </div>
                           <div className="content-bottom">
+                            <h6 className="price">
+                              {formatPriceWithUnit(property.price, property.listing_type)}
+                            </h6>
                             <div className="d-flex gap-8 align-items-center">
                               <div className="avatar avt-40 round" style={{ position: 'relative', overflow: 'hidden' }}>
                                 <img
@@ -136,9 +144,6 @@ export default function Properties() {
                               </div>
                               <span>{property.owner_name || "Chủ nhà"}</span>
                             </div>
-                            <h6 className="price">
-                              {formatPriceWithUnit(property.price, property.listing_type)}
-                            </h6>
                           </div>
                         </div>
                       </div>

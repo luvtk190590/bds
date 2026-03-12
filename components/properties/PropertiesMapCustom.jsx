@@ -5,7 +5,8 @@ import PropertyMap from "../map/PropertyMap";
 import { formatPrice, formatArea } from "@/lib/utils/formatters";
 import Link from "next/link";
 import Image from "next/image";
-import { PROPERTY_CATEGORIES, PRICE_PRESETS, PRICE_PRESETS_RENT, AREA_PRESETS, LEGAL_STATUS_OPTIONS, AMENITIES } from "@/lib/constants";
+import { PROPERTY_CATEGORIES as PROPERTY_CATEGORIES_STATIC, PRICE_PRESETS, PRICE_PRESETS_RENT, AREA_PRESETS, LEGAL_STATUS_OPTIONS, AMENITIES } from "@/lib/constants";
+import { usePropertyCategoriesCms } from "@/lib/hooks/useCmsData";
 import SearchableSelect from "@/components/common/SearchableSelect";
 
 const AMENITY_GROUPS = AMENITIES.reduce((acc, a) => {
@@ -94,6 +95,8 @@ function buildActiveFilters(form) {
 
 export default function PropertiesMapCustom() {
   const searchParams = useSearchParams();
+  const dbCategories = usePropertyCategoriesCms();
+  const PROPERTY_CATEGORIES = dbCategories ?? PROPERTY_CATEGORIES_STATIC;
   const [mapData, setMapData] = useState([]);
   const [form, setForm] = useState(() => {
     const hasParams = searchParams.toString().length > 0;
@@ -537,8 +540,8 @@ function PropertyListing({ mapData, layout, tabId, active }) {
                     </ul>
                   </div>
                   <div className="content-bottom">
-                    <span>{elm.owner_name || "Chưa cập nhật"}</span>
                     <h6 className="price">{formatPrice(elm.price)}</h6>
+                    <span>{elm.owner_name || "Chưa cập nhật"}</span>
                   </div>
                 </div>
               </div>

@@ -2,19 +2,25 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { trackFilterUsage } from "@/lib/utils/trackFilter";
 import SearchableSelect from "@/components/common/SearchableSelect";
 import {
-  PROPERTY_CATEGORIES,
+  PROPERTY_CATEGORIES as PROPERTY_CATEGORIES_STATIC,
   PRICE_PRESETS,
   PRICE_PRESETS_RENT,
   AREA_PRESETS,
   LEGAL_STATUS_OPTIONS,
 } from "@/lib/constants";
+import { usePropertyCategoriesCms } from "@/lib/hooks/useCmsData";
 
 let _provincesCache = null;
 
 export default function HeroFilter() {
   const router = useRouter();
+  const { profile } = useAuth();
+  const dbCategories = usePropertyCategoriesCms();
+  const PROPERTY_CATEGORIES = dbCategories ?? PROPERTY_CATEGORIES_STATIC;
   const advPanelRef = useRef();
   const advBtnRef = useRef();
 
@@ -100,6 +106,10 @@ export default function HeroFilter() {
 
   function handleSubmit(e) {
     e.preventDefault();
+    trackFilterUsage(profile?.id, {
+      listingType, provinceCode,
+      minPrice: minPrice || null, maxPrice: maxPrice || null,
+    });
     const params = new URLSearchParams();
     if (listingType)    params.set("lt",   listingType);
     if (categoryId)     params.set("cat",  categoryId);

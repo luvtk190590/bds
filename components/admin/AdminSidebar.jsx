@@ -7,16 +7,26 @@ const NAV = [
   {
     section: "Tổng quan",
     items: [
-      { href: "/admin", label: "Dashboard", icon: "icon-home2" },
+      { href: "/admin", label: "Dashboard", icon: "icon-dashboard" },
     ],
   },
   {
     section: "Quản trị hệ thống",
     items: [
-      { href: "/admin/users", label: "Tất cả người dùng", icon: "icon-user2" },
-      { href: "/admin/properties", label: "Tất cả tin đăng", icon: "icon-listing" },
-      { href: "/admin/blog", label: "Quản lý blog", icon: "icon-edit" },
-      { href: "/admin/reviews", label: "Quản lý đánh giá", icon: "icon-star" },
+      { href: "/admin/users",      label: "Tất cả người dùng", icon: "icon-profile" },
+      { href: "/admin/properties", label: "Tất cả tin đăng",   icon: "icon-listing" },
+      { href: "/admin/blog",       label: "Quản lý blog",       icon: "icon-edit" },
+      { href: "/admin/reviews",    label: "Quản lý đánh giá",   icon: "icon-star" },
+    ],
+  },
+  {
+    section: "Giao diện & Nội dung",
+    items: [
+      { href: "/admin/menu",       label: "Menu chính",     icon: "icon-list-dashes" },
+      { href: "/admin/footer",     label: "Footer",          icon: "icon-customize" },
+      { href: "/admin/categories", label: "Danh mục BĐS",   icon: "icon-categories" },
+      { href: "/admin/pages",      label: "Quản lý trang",  icon: "icon-file-text" },
+      { href: "/admin/media",      label: "Thư viện Media", icon: "icon-images" },
     ],
   },
   {
@@ -86,7 +96,7 @@ export default function AdminSidebar() {
           className="admin-nav-item"
           style={{ width: "100%", border: "none", background: "none", cursor: "pointer", textAlign: "left" }}
         >
-          <i className="icon icon-logout nav-icon" />
+          <i className="icon icon-sign-out nav-icon" />
           <span>Đăng xuất</span>
         </button>
       </div>

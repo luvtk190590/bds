@@ -2,15 +2,18 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { trackFilterUsage } from "@/lib/utils/trackFilter";
 import SearchableSelect from "@/components/common/SearchableSelect";
 import {
-  PROPERTY_CATEGORIES,
+  PROPERTY_CATEGORIES as PROPERTY_CATEGORIES_STATIC,
   PRICE_PRESETS,
   PRICE_PRESETS_RENT,
   AREA_PRESETS,
   LEGAL_STATUS_OPTIONS,
   AMENITIES,
 } from "@/lib/constants";
+import { usePropertyCategoriesCms } from "@/lib/hooks/useCmsData";
 
 const INITIAL_FORM = {
   listingType: null,
@@ -41,6 +44,9 @@ let _provincesCache = null;
 
 export default function WidgetBox() {
   const router = useRouter();
+  const { profile } = useAuth();
+  const dbCategories = usePropertyCategoriesCms();
+  const PROPERTY_CATEGORIES = dbCategories ?? PROPERTY_CATEGORIES_STATIC;
   const [form, setForm] = useState(INITIAL_FORM);
   const [districts, setDistricts] = useState([]);
   const [wards, setWards] = useState([]);
@@ -100,6 +106,12 @@ export default function WidgetBox() {
 
   function handleSubmit(e) {
     e.preventDefault();
+    trackFilterUsage(profile?.id, {
+      listingType: form.listingType,
+      provinceCode: form.provinceCode,
+      minPrice: form.minPrice || null,
+      maxPrice: form.maxPrice || null,
+    });
     const params = new URLSearchParams();
     if (form.listingType)    params.set("lt",   form.listingType);
     if (form.categoryId)     params.set("cat",  form.categoryId);

@@ -36,7 +36,7 @@ export default function AdminDashboard() {
   }, []);
 
   const statCards = stats ? [
-    { label: "Tổng người dùng", value: stats.totalUsers, icon: "icon-user2", color: "icon-blue", link: "/admin/users" },
+    { label: "Tổng người dùng", value: stats.totalUsers, icon: "icon-profile", color: "icon-blue", link: "/admin/users" },
     { label: "Chờ xác minh", value: stats.pendingVerifications, icon: "icon-check-circle", color: "icon-orange", link: "/admin/users?tab=pending" },
     { label: "Tin chờ duyệt", value: stats.pendingProperties, icon: "icon-home-location", color: "icon-purple", link: "/admin/properties?tab=pending" },
     { label: "Tổng tin đăng", value: stats.totalProperties, icon: "icon-listing", color: "icon-cyan", link: "/admin/properties" },
