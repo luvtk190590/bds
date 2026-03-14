@@ -21,7 +21,7 @@ export default function Locations({ parentClass = "flat-location px-10" }) {
   const { data: locations = [], isLoading } = useSWR('top-provinces', async () => {
     const { data, error } = await supabase.rpc('get_top_provinces', { p_limit: 10 });
     if (error) {
-      console.error(error);
+      if (!error.message?.includes('AbortError') && error.code !== '') console.error(error);
       return [];
     }
     return data || [];
