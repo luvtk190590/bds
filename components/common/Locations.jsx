@@ -6,8 +6,6 @@ import Image from "next/image";
 import useSWR from "swr";
 import { createClient } from "@/lib/supabase/client";
 
-const supabase = createClient();
-
 const defaultImages = [
   "/images/location/location-1.jpg",
   "/images/location/location-2.jpg",
@@ -18,6 +16,7 @@ const defaultImages = [
 ];
 
 export default function Locations({ parentClass = "flat-location px-10" }) {
+  const supabase = createClient();
   const { data: locations = [], isLoading } = useSWR('top-provinces', async () => {
     const { data, error } = await supabase.rpc('get_top_provinces', { p_limit: 10 });
     if (error) {

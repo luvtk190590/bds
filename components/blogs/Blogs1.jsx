@@ -4,14 +4,10 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Sidebar from "./Sidebar";
 import Pagination2 from "../common/Pagination2";
-import { createClient } from "@supabase/supabase-js";
-
-// Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { createClient } from "@/lib/supabase/client";
 
 export default function Blogs1() {
+  const supabase = createClient();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
