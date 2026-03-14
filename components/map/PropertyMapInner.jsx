@@ -3,22 +3,14 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
 import useSWR from "swr";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/client";
 import { formatPrice, formatArea } from "@/lib/utils/formatters";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 
-// ---- Supabase client (lazy init) ----
-let _supabase = null;
 function getSupabase() {
-    if (!_supabase) {
-        _supabase = createSupabaseClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-        );
-    }
-    return _supabase;
+    return createClient();
 }
 
 // ---- Custom Marker Icon ----
